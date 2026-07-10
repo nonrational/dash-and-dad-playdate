@@ -39,8 +39,9 @@ condition is "feels good to look around."
 
 ## View Composition
 
-- Screen 400×240, 1-bit. Circular eyepiece mask, radius ~105px, centered
-  slightly above screen middle. Black surround.
+- Screen 400×240, 1-bit. Circular eyepiece mask, radius 104px, centered at
+  (200, 110) — leaves a 26px strip below the circle for the HUD. Black
+  surround.
 - Pre-rendered mask bitmap (black with transparent circle) drawn over the world
   each frame; crosshairs with tick marks and the HUD drawn on top.
 - HUD: bearing readout below the circle, e.g. `BRG 047°`.
@@ -54,8 +55,9 @@ condition is "feels good to look around."
   distance parallax); depth cues come from scale, vertical placement, and
   angular drift speed.
 - **Height:** normalized `scope.height ∈ [-1, +1]`, 0 = lens exactly at the
-  waterline. Waterline screen Y = `centerY + scope.height * 90px` (raised scope
-  → line drops in view → more sky; submerged → line exits the top → all water).
+  waterline. Waterline screen Y = `centerY + scope.height * 120px`. The 120px
+  swing exceeds the 104px circle radius, so at +1 the line sits below the
+  circle (no underwater visible) and at −1 above it (no sky visible).
 
 ## World Model
 
