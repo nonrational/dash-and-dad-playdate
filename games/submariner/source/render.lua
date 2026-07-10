@@ -22,8 +22,13 @@ local function setInk(darkness)
 end
 
 function Render.init()
-    mask = gfx.image.new(400, 240, gfx.kColorBlack)
+    -- The image must be created clear: Playdate images only carry an alpha
+    -- mask when built on a transparent background, so punching kColorClear
+    -- into a black-background image is a no-op and the mask stays opaque.
+    mask = gfx.image.new(400, 240, gfx.kColorClear)
     gfx.pushContext(mask)
+    gfx.setColor(gfx.kColorBlack)
+    gfx.fillRect(0, 0, 400, 240)
     gfx.setColor(gfx.kColorClear)
     gfx.fillCircleAtPoint(Render.CENTER_X, Render.CENTER_Y, Render.RADIUS)
     gfx.popContext()
