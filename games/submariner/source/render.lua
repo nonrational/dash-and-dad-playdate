@@ -337,7 +337,7 @@ local function drawWaterline(wy)
     end
 end
 
-local function drawCrosshairs()
+local function drawCrosshairs(holdProgress)
     local cx, cy, r = Render.CENTER_X, Render.CENTER_Y, Render.RADIUS
     gfx.setColor(gfx.kColorBlack)
     gfx.setLineWidth(1)
@@ -345,10 +345,17 @@ local function drawCrosshairs()
     gfx.drawLine(cx, cy + 6, cx, cy + r)
     gfx.drawLine(cx - r, cy, cx - 6, cy)
     gfx.drawLine(cx + 6, cy, cx + r, cy)
+    local filledCount = math.ceil((holdProgress or 0) * 4)
     for i = -4, 4 do
         if i ~= 0 then
             local x = cx + i * 20
-            gfx.drawLine(x, cy - 3, x, cy + 3)
+            if filledCount > 0 and math.abs(i) <= filledCount then
+                gfx.setLineWidth(3)
+                gfx.drawLine(x, cy - 4, x, cy + 4)
+                gfx.setLineWidth(1)
+            else
+                gfx.drawLine(x, cy - 3, x, cy + 3)
+            end
         end
     end
 end
@@ -361,9 +368,89 @@ local function drawHUD()
     gfx.setImageDrawMode(gfx.kDrawModeCopy)
 end
 
+local function drawBoatIcon(x, y)
+    gfx.fillPolygon(x - 30, y + 14, x + 30, y + 14, x + 22, y - 2, x - 22, y - 2)
+    gfx.drawLine(x, y - 2, x, y - 30)
+    gfx.fillTriangle(x + 2, y - 28, x + 24, y - 4, x + 2, y - 4)
+end
+
+local function drawLighthouseIcon(x, y)
+    gfx.fillPolygon(x - 8, y + 20, x + 8, y + 20, x + 14, y - 20, x - 14, y - 20)
+    gfx.fillRect(x - 11, y - 30, 22, 12)
+end
+
+local function drawSchoolIcon(x, y)
+    local offsets = { { -20, -10 }, { 0, -16 }, { 20, -8 }, { -10, 8 }, { 12, 12 } }
+    for _, o in ipairs(offsets) do
+        local fx, fy = x + o[1], y + o[2]
+        gfx.fillEllipseInRect(fx - 8, fy - 3, 16, 6)
+        gfx.fillTriangle(fx - 8, fy, fx - 14, fy - 3, fx - 14, fy + 3)
+    end
+end
+
+local function drawSharkIcon(x, y)
+    gfx.fillPolygon(x - 32, y + 6, x + 22, y + 10, x + 34, y, x + 20, y - 4, x - 30, y - 4)
+    gfx.fillTriangle(x - 4, y - 4, x + 4, y - 22, x + 10, y - 4)
+    gfx.fillTriangle(x + 20, y + 8, x + 34, y + 20, x + 20, y + 20)
+end
+
+local function drawWhaleIcon(x, y)
+    gfx.fillPolygon(x - 34, y, x - 10, y - 16, x + 26, y - 10, x + 34, y + 2, x + 10, y + 14, x - 26, y + 12)
+    gfx.fillTriangle(x + 30, y - 2, x + 44, y - 14, x + 44, y + 8)
+end
+
+local function drawSubmarineIcon(x, y)
+    gfx.fillRoundRect(x - 32, y - 6, 64, 16, 8)
+    gfx.fillRect(x - 4, y - 18, 10, 12)
+    gfx.drawLine(x + 1, y - 18, x + 1, y - 24)
+end
+
+local function drawPlaneIcon(x, y)
+    gfx.fillPolygon(x - 30, y, x + 30, y - 2, x + 34, y + 2, x - 28, y + 4)
+    gfx.fillTriangle(x - 4, y, x - 16, y - 18, x - 4, y - 4)
+    gfx.fillTriangle(x - 4, y + 2, x - 16, y + 18, x - 4, y + 4)
+end
+
+local function drawHelicopterIcon(x, y)
+    gfx.fillRoundRect(x - 22, y - 6, 40, 16, 8)
+    gfx.fillRect(x + 16, y - 1, 16, 5)
+    gfx.drawLine(x - 30, y - 16, x + 30, y - 16)
+    gfx.fillRect(x - 3, y - 16, 6, 10)
+end
+
+local RAIL_ICONS = {
+    boat = drawBoatIcon,
+    lighthouse = drawLighthouseIcon,
+    ["fish school"] = drawSchoolIcon,
+    shark = drawSharkIcon,
+    whale = drawWhaleIcon,
+    submarine = drawSubmarineIcon,
+    plane = drawPlaneIcon,
+    helicopter = drawHelicopterIcon,
+}
+
+local FLASH_BLINK_PERIOD = 0.12
+
 local function drawSpyRail()
-    gfx.setImageDrawMode(gfx.kDrawModeFillWhite)
-    gfx.drawTextAligned(string.upper(Spy.target), Render.RAIL_CENTER_X, 110, kTextAlignment.center)
+    local flashing = Spy.flashTimer < Spy.FLASH_DURATION
+    local blinkOn = flashing and (math.floor(Spy.flashTimer / FLASH_BLINK_PERIOD) % 2 == 0)
+    local cx = Render.RAIL_CENTER_X
+
+    if blinkOn then
+        gfx.setColor(gfx.kColorWhite)
+        gfx.fillRoundRect(cx - 84, 30, 168, 180, 8)
+        gfx.setColor(gfx.kColorBlack)
+        gfx.setImageDrawMode(gfx.kDrawModeCopy)
+    else
+        gfx.setColor(gfx.kColorWhite)
+        gfx.setImageDrawMode(gfx.kDrawModeFillWhite)
+    end
+
+    gfx.drawTextAligned("FIND A", cx, 46, kTextAlignment.center)
+    local iconDrawer = RAIL_ICONS[Spy.target]
+    iconDrawer(cx, 110)
+    gfx.drawTextAligned(string.upper(Spy.target), cx, 168, kTextAlignment.center)
+
     gfx.setImageDrawMode(gfx.kDrawModeCopy)
 end
 
@@ -384,7 +471,7 @@ function Render.draw(dt)
         drawDroplets(sp)
     end
     mask:draw(0, 0)
-    drawCrosshairs()
+    drawCrosshairs(Spy.holdProgress)
     drawHUD()
     drawSpyRail()
 end
