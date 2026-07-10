@@ -78,6 +78,30 @@ in Tasks 1-9. Run `make run`, play for a few minutes, and check each item.
   faintly audible at once, crossfading smoothly as you crank through,
   not cutting abruptly from one to the other.
 
+## I Spy objective
+
+- [ ] **Rail readability at a glance**: glance at the rail without studying it —
+  the icon and word should be readable/recognizable in under a second, since
+  this is meant to work for a 6-year-old without adult help.
+- [ ] **Hold-to-confirm feel**: aim at a matching entity and hold — the
+  crosshair tick marks should visibly fill in as progress toward the find,
+  not feel like a silent/unresponsive wait.
+- [ ] **Sweep-past doesn't count**: quickly rotate past a matching entity
+  without holding — it should NOT register as a find.
+- [ ] **Find flash + chime timing**: on a successful find, the flash and the
+  chime should land together, not noticeably out of sync.
+- [ ] **Category never repeats immediately**: after several finds in a row,
+  confirm the same category doesn't appear twice back to back.
+- [ ] **Whale spout timing**: watch the whale's bearing for a while — the
+  spout should appear now and then near the surface, not so rarely it's
+  never seen in a normal play session, and not so often it looks constant.
+- [ ] **New entity silhouettes read clearly**: the rival submarine, plane,
+  helicopter, and shark should each look distinct from existing boats/fish
+  at a glance, not like a reused/ambiguous shape.
+- [ ] **A 6-year-old can play it**: if possible, hand the device to a
+  6-year-old (or someone unfamiliar with the game) and see whether they can
+  find a few targets in a row without being told how.
+
 ## Notes from the Task 9 acceptance pass
 
 - The inverted-rect clip experiment (extending the near-lane clip by the
