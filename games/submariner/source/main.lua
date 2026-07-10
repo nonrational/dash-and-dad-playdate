@@ -1,12 +1,11 @@
 import "CoreLibs/graphics"
+import "CoreLibs/ui"
 import "tests"
+import "scope"
 import "render"
 import "shots"
 
 playdate.display.setRefreshRate(30)
-
--- Placeholder scope state; replaced by scope.lua in the next task.
-Scope = { bearing = 47, height = 0.3 }
 
 Render.init()
 if playdate.isSimulator then
@@ -19,6 +18,10 @@ function playdate.update()
     if dt <= 0 or dt > 0.25 then
         dt = 1 / 30
     end
+    Scope.update(dt)
     Render.draw(dt)
+    if playdate.isCrankDocked() then
+        playdate.ui.crankIndicator:draw()
+    end
     Shots.update(dt)
 end
