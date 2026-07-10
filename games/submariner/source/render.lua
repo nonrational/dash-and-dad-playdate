@@ -114,6 +114,10 @@ local function drawAbove(wy)
     end
     for _, laneName in ipairs(LANE_ORDER) do
         local lane = World.LANES[laneName]
+        -- Extend the clip by the lane's dip so the lower hull stays visible
+        -- below the line (the sea tint and chop draw over it afterwards);
+        -- clipping exactly at wy would swallow near-lane hulls entirely.
+        gfx.setClipRect(0, 0, 400, wy + lane.yOff)
         for _, b in ipairs(World.boats) do
             if b.lane == laneName then
                 local x = Geom.bearingToScreenX(b.bearing, Scope.bearing,
