@@ -64,12 +64,19 @@ local function drawPlayerMarker()
     gfx.fillCircleAtPoint(x, y - 14, 8)
     gfx.fillTriangle(x - 12, y + 20, x + 12, y + 20, x, y - 4)
     -- Kick leg, rotating 1:1 with the crank (0 = up, clockwise) so winding
-    -- up and flicking read on-screen. Placeholder like the rest of the
+    -- up and flicking read on-screen. The white underlay keeps the leg
+    -- legible when it sweeps across the solid black body (about half the
+    -- rotation, verified by capture). Placeholder like the rest of the
     -- figure; stays inside this one draw function for the later sprite swap.
     local rad = math.rad(Player.crankAngle)
     local hipX, hipY = x + 6, y + 6
     local footX = hipX + 12 * math.sin(rad)
     local footY = hipY - 12 * math.cos(rad)
+    gfx.setColor(gfx.kColorWhite)
+    gfx.setLineWidth(5)
+    gfx.drawLine(hipX, hipY, footX, footY)
+    gfx.fillCircleAtPoint(footX, footY, 4)
+    gfx.setColor(gfx.kColorBlack)
     gfx.setLineWidth(3)
     gfx.drawLine(hipX, hipY, footX, footY)
     gfx.setLineWidth(1)
