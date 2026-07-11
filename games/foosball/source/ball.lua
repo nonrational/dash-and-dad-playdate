@@ -141,12 +141,18 @@ end
 function Ball.resolve(goalieX)
     local saved = Geom.inBand(goalieX, Ball.shotTargetX, Field.SAVE_RADIUS)
     Ball.result = saved and "save" or "goal"
-    -- Rest pose is where the outcome story ends: a save parks the ball at
-    -- the goalie that blocked it (not at the aim point, which can be up to
-    -- SAVE_RADIUS away and reads as "it went in"); a goal parks it inside
-    -- the net.
+    -- Rest pose is where the outcome story ends: a save parks the ball
+    -- against the keeper's reach edge on the side the shot arrived —
+    -- teleporting it to the keeper's center (or leaving it at an aim
+    -- point up to SAVE_RADIUS away) both read as the wrong outcome. A
+    -- goal parks it inside the net.
     if saved then
-        Ball.restX, Ball.restY = goalieX, Field.GOAL_Y - 8
+        local reach = Geom.clamp(Ball.shotTargetX - goalieX,
+            -Field.KEEPER_HALF, Field.KEEPER_HALF)
+        -- Rest on the keeper's arm line: only the arms span the full
+        -- reach, so an edge-of-band save at waist height would still
+        -- show daylight.
+        Ball.restX, Ball.restY = goalieX + reach, Field.GOAL_Y - 18
     else
         Ball.restX, Ball.restY = Ball.shotTargetX, Field.GOAL_Y - 10
     end

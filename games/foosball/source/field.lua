@@ -11,7 +11,12 @@ Field = {
     BALL_MAX_SCALE = 1.0,
 
     CONTACT_BAND_HALF = 45,
-    SAVE_RADIUS = 26,
+    -- The keeper's reach: drawn arms-out half-width (KEEPER_HALF) plus the
+    -- ball's radius at goal scale, with under a pixel of grace — so a
+    -- "SAVED" always looks like contact. Retuning this must re-derive the
+    -- goalie-speed fairness ledger (see the spec's 2026-07-11 addendum).
+    SAVE_RADIUS = 15,
+    KEEPER_HALF = 11,
 }
 
 -- The goalie moves within [GOAL_MIN, GOAL_MAX] — the same range shot aim is

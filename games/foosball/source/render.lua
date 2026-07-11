@@ -54,12 +54,6 @@ local function drawGoal()
     gfx.drawRect(Field.GOAL_MIN, Field.GOAL_Y - 22, Field.GOAL_MAX - Field.GOAL_MIN, 22)
 end
 
-local function drawGoalieMarker()
-    gfx.setColor(gfx.kColorBlack)
-    local x, y = Goalie.x, Field.GOAL_Y - 11
-    gfx.fillRoundRect(x - 14, y - 6, 28, 12, 4)
-end
-
 -- The rod the player figure hangs from, at chest height.
 local ROD_Y = Field.PLAYER_Y - 8
 
@@ -72,57 +66,67 @@ local function drawRod()
     gfx.fillRect(leftX, ROD_Y - 2, rightX - leftX, 4)
 end
 
--- Foosball-man silhouette in figure-local coordinates: origin at the rod
+-- Foosball-man silhouettes in figure-local coordinates: origin at the rod
 -- boss in the chest, y down, upright pose, matching the classic molded
--- table man seen from behind: boxy square-shouldered torso, a shirt-hem
--- step into a narrower fused-leg column, and a foot block wider than the
--- ankles. The crank tips the figure forward/backward around the rod axis,
--- so a vertex keeps its x and has its y foreshortened by cos(angle); the
--- head stays a circle at every angle, as a sphere should.
-local FIGURE_BODY = {
-    -10, -10, 10, -10, -- shoulders
-    10, 4, 4, 4, -- right torso side, shirt hem step
-    4, 14, 7, 14, -- right leg, step out to the foot block
-    7, 20, -7, 20, -- foot block side, sole
-    -7, 14, -4, 14, -- left foot step back to the leg
-    -4, 4, -10, 4, -- left leg, shirt hem step
+-- table man seen from behind: boxy square-shouldered torso and a foot
+-- block wider than the ankles. The player has a shirt-hem step into a
+-- narrower fused-leg column; the keeper spreads its arms into a wide bar
+-- (its reach — see KEEPER_HALF in field.lua) over a wider foot block.
+local PLAYER_FIGURE = {
+    body = {
+        -10, -10, 10, -10, -- shoulders
+        10, 4, 4, 4, -- right torso side, shirt hem step
+        4, 14, 7, 14, -- right leg, step out to the foot block
+        7, 20, -7, 20, -- foot block side, sole
+        -7, 14, -4, 14, -- left foot step back to the leg
+        -4, 4, -10, 4, -- left leg, shirt hem step
+    },
+    footLY = 17,
+    footHalfW = 7,
+}
+local KEEPER_FIGURE = {
+    body = {
+        -15, -10, 15, -10, -- arms-out span, tip to tip
+        15, -5, 7, -5, -- right arm underside, back to the torso
+        7, 6, 4, 6, -- right torso side, waist step
+        4, 12, 10, 12, -- right leg, step out to the foot block
+        10, 18, -10, 18, -- foot block side, sole
+        -10, 12, -4, 12, -- left foot step back to the leg
+        -4, 6, -7, 6, -- left leg, waist step
+        -7, -5, -15, -5, -- left torso side, left arm underside
+    },
+    footLY = 15,
+    footHalfW = 10,
 }
 local HEAD_LY, HEAD_R = -16, 6
-local FOOT_LY, FOOT_HALF_W = 17, 7
 
-local function drawPlayerMarker()
-    -- The figure tips 1:1 with the crank (0 = upright): cranking swings
-    -- the feet toward the goal and the head toward the camera, and back.
-    -- Whichever end is nearer the camera draws last, so a figure tipped
-    -- toward you reads as just the head circle occluding the body — like
-    -- eyeballing a spun rod from behind. The white halo keeps each part
-    -- legible over the rod, the ball, and the part behind it. Placeholder
-    -- like the rest; stays inside this one draw function for the later
-    -- sprite swap.
-    local x = Player.x
-    local rad = math.rad(Player.crankAngle)
-    -- sin is negated so the on-screen tip matches the crank's felt
-    -- direction (checked in live play — the raw sign spun opposite).
-    local c, s = math.cos(rad), -math.sin(rad)
-
+-- Draws one molded man hanging on a rod at (x, rodY), tipped by the pose
+-- (c, s) = (cos, sin) of its rotation around the rod axis. A body vertex
+-- keeps its x and has its y foreshortened by c; the head stays a circle
+-- at every angle, as a sphere should; whichever end is nearer the camera
+-- (s > 0 = head) draws last. The white halo keeps each part legible over
+-- the rod, the ball, and the part behind it. Placeholder art; swapping in
+-- sprites later only touches this function and its two thin callers.
+local function drawManFigure(fig, x, rodY, scale, c, s)
+    local body = fig.body
     local pts = {}
-    for i = 1, #FIGURE_BODY, 2 do
-        pts[i] = x + FIGURE_BODY[i]
-        pts[i + 1] = ROD_Y + FIGURE_BODY[i + 1] * c
+    for i = 1, #body, 2 do
+        pts[i] = x + body[i] * scale
+        pts[i + 1] = rodY + body[i + 1] * scale * c
     end
     -- drawPolygon strokes the closing edge only if the first point is
     -- repeated, so append it for the halo pass.
     pts[#pts + 1] = pts[1]
     pts[#pts + 1] = pts[2]
 
-    -- s > 0 means the head end is the near end; it also swells slightly
-    -- as it comes at you (and shrinks tipped away) for a bit of depth.
-    local headY = ROD_Y + HEAD_LY * c
-    local headR = HEAD_R + 1.5 * s
+    -- The head swells slightly as it comes at you (and shrinks tipped
+    -- away) for a bit of depth.
+    local headY = rodY + HEAD_LY * scale * c
+    local headR = (HEAD_R + 1.5 * s) * scale
 
     local function drawBody()
         gfx.setColor(gfx.kColorWhite)
-        gfx.setLineWidth(5)
+        gfx.setLineWidth(5 * scale)
         gfx.drawPolygon(table.unpack(pts))
         gfx.setColor(gfx.kColorBlack)
         gfx.fillPolygon(table.unpack(pts))
@@ -130,11 +134,11 @@ local function drawPlayerMarker()
         -- The rod boss in the chest, like the molded hole in a real man.
         -- It sits on the rotation axis, so it never moves with the tip.
         gfx.setColor(gfx.kColorWhite)
-        gfx.fillCircleAtPoint(x, ROD_Y, 2)
+        gfx.fillCircleAtPoint(x, rodY, 2 * scale)
     end
     local function drawHead()
         gfx.setColor(gfx.kColorWhite)
-        gfx.fillCircleAtPoint(x, headY, headR + 2)
+        gfx.fillCircleAtPoint(x, headY, headR + 2 * scale)
         gfx.setColor(gfx.kColorBlack)
         gfx.fillCircleAtPoint(x, headY, headR)
     end
@@ -143,14 +147,15 @@ local function drawPlayerMarker()
     -- surface you're looking at when the feet point at the camera, and
     -- its own halo keeps the figure from vanishing there.
     local function drawFoot()
-        local footY = ROD_Y + FOOT_LY * c
-        local h = 2 + 6 * math.abs(s)
+        local footY = rodY + fig.footLY * scale * c
+        local halfW = fig.footHalfW * scale
+        local h = (2 + 6 * math.abs(s)) * scale
         gfx.setColor(gfx.kColorWhite)
-        gfx.fillRoundRect(x - FOOT_HALF_W - 2, footY - h / 2 - 2,
-            FOOT_HALF_W * 2 + 4, h + 4, 4)
+        gfx.fillRoundRect(x - halfW - 2, footY - h / 2 - 2,
+            halfW * 2 + 4, h + 4, 4)
         gfx.setColor(gfx.kColorBlack)
-        gfx.fillRoundRect(x - FOOT_HALF_W, footY - h / 2,
-            FOOT_HALF_W * 2, h, 3)
+        gfx.fillRoundRect(x - halfW, footY - h / 2,
+            halfW * 2, h, 3)
     end
 
     if s >= 0 then
@@ -162,6 +167,28 @@ local function drawPlayerMarker()
         drawBody()
         drawFoot()
     end
+end
+
+local function drawPlayerMarker()
+    -- The figure tips 1:1 with the crank (0 = upright); sin is negated so
+    -- the on-screen tip matches the crank's felt direction (checked in
+    -- live play — the raw sign spun opposite).
+    local rad = math.rad(Player.crankAngle)
+    drawManFigure(PLAYER_FIGURE, Player.x, ROD_Y, 1, math.cos(rad), -math.sin(rad))
+end
+
+local KEEPER_ROD_Y = Field.GOAL_Y - 13
+local KEEPER_SCALE = 0.75
+
+local function drawGoalieMarker()
+    -- Keeper rod across the goal mouth, then the arms-out keeper, always
+    -- upright (no crank on that rod). Its drawn arm span (KEEPER_HALF)
+    -- plus the ball's goal-scale radius is what SAVE_RADIUS promises, so
+    -- a "SAVED" always looks like contact.
+    setInk(0.5)
+    gfx.fillRect(Field.GOAL_MIN - 10, KEEPER_ROD_Y - 1,
+        (Field.GOAL_MAX - Field.GOAL_MIN) + 20, 3)
+    drawManFigure(KEEPER_FIGURE, Goalie.x, KEEPER_ROD_Y, KEEPER_SCALE, 1, 0)
 end
 
 local function drawBallMarker()

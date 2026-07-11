@@ -52,6 +52,10 @@ in Tasks 1-11. Run `make run`, play for a few minutes, and check each item.
 - [ ] **Goalie doesn't react early**: watch the goalie during the
   approach/window phases (before your flick) — it should sit near center,
   not visibly anticipate your shot.
+- [ ] **Save contact honesty**: watch several saves — "SAVED" should only
+  appear when the ball visibly meets the keeper's arms or body (the ball
+  parks against the keeper's edge, never floating beside it), and a
+  near-missed corner shot should score rather than phantom-save.
 
 ## Audio (Task 9) — all items require actually hearing the game
 

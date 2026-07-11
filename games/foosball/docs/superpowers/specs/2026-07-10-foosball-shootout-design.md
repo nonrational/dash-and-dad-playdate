@@ -253,3 +253,26 @@ at the player's feet instead of whiffing "TOO SLOW" — a new `held` state in
   a normal serve.
 - An expiry **outside** the band still whiffs "TOO SLOW"; flicking while
   out of band still whiffs "MISSED THE BALL".
+
+## Addendum (2026-07-11): honest keeper reach
+
+From live play: saves were registering with visible daylight between ball
+and keeper. Two causes — `SAVE_RADIUS = 26` stood in for reach while the
+drawn goalie was only 14px half-wide (+3px ball ≈ 17px of believable
+contact, leaving a 9px phantom band), and the save rest pose teleported the
+ball to the keeper's center, up to 26px sideways.
+
+The keeper is now an arms-out foosball man whose drawn reach *is* the save
+band, and the saved ball parks against the reach edge on the side it
+arrived:
+
+- Drawn arm span ±`Field.KEEPER_HALF` (11px) + ball at goal scale (3px) +
+  <1px grace = `Field.SAVE_RADIUS` (15px).
+- Re-derived fairness ledger (was: need 60−26=34, max close 100×0.22≈22,
+  gap ≈12px): need = 60−15 = **45px**; max close = 150×0.22 = **33px**;
+  persistent near-post gap ≈ **12px** — unchanged target. Soft shots
+  (0.55s) at max close 82px: still always saveable. Streak-0 (base 70):
+  hard corner shots need ~30px displacement to score, close to the old
+  beginner feel.
+- Goalie constants moved 60/4/100 → **70/6/150** (base/ramp/cap); the cap
+  now lands at streak ~13 instead of ~10.

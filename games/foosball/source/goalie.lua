@@ -4,9 +4,14 @@ import "ball"
 
 Goalie = { x = Field.GOALIE_CENTER }
 
-Goalie.BASE_SPEED = 60
-Goalie.RAMP_PER_STREAK = 4
-Goalie.MAX_SPEED = 100
+-- Retuned alongside SAVE_RADIUS 26 -> 15 (honest keeper reach): the reach
+-- the band lost, speed gives back. Max close = 150 * 0.22s = 33px against
+-- the 45px worst-case need, preserving the spec's ~12px near-post gap
+-- that stays unreachable at max difficulty. Ledger in the spec's
+-- 2026-07-11 addendum.
+Goalie.BASE_SPEED = 70
+Goalie.RAMP_PER_STREAK = 6
+Goalie.MAX_SPEED = 150
 
 function Goalie.init()
     Goalie.x = Field.GOALIE_CENTER
