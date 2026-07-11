@@ -8,9 +8,12 @@ in Tasks 1-11. Run `make run`, play for a few minutes, and check each item.
 
 - [ ] **Track speed**: 260px/s — check whether sliding corner-to-corner
   feels responsive or sluggish/twitchy.
-- [ ] **Kick leg**: tracks the crank 1:1 with no perceptible lag; a flick
-  reads as a kick through the ball, and docking the crank freezes the leg
-  at its last pose.
+- [ ] **Figure tip**: the whole foosball man tips forward/backward on its
+  rod 1:1 with the crank, with no perceptible lag; tipped toward you it
+  collapses to just the head circle, tipped away the feet swing up toward
+  the goal, and docking the crank freezes the pose. If cranking forward
+  tips the man the wrong way, flip the sign of `s` in `drawPlayerMarker`
+  (`source/render.lua`).
 
 ## Contact mechanics (Task 6)
 

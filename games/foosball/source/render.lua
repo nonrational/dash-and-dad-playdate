@@ -60,29 +60,81 @@ local function drawGoalieMarker()
     gfx.fillRoundRect(x - 14, y - 6, 28, 12, 4)
 end
 
+-- The rod the player figure hangs from, at chest height.
+local ROD_Y = Field.PLAYER_Y - 8
+
+local function drawRod()
+    -- Wall-to-wall between the sidelines like a real table rod; mid-gray
+    -- dither so the solid-black figure spinning over it stays readable.
+    setInk(0.5)
+    local leftX = sidelineX(Field.TRACK_MIN - PITCH_MARGIN, ROD_Y)
+    local rightX = sidelineX(Field.TRACK_MAX + PITCH_MARGIN, ROD_Y)
+    gfx.fillRect(leftX, ROD_Y - 2, rightX - leftX, 4)
+end
+
+-- Foosball-man silhouette in figure-local coordinates: origin at the rod,
+-- y down, upright pose, symmetric like the classic table man seen from
+-- behind. The crank tips the figure forward/backward around the rod axis,
+-- so a vertex keeps its x and has its y foreshortened by cos(angle); the
+-- head stays a circle at every angle, as a sphere should.
+local FIGURE_BODY = {
+    -8, -10, 8, -10, -- shoulders
+    5, 4, 3.5, 14, -- right side: hip down to the ankle
+    8, 20, -8, 20, -- foot flare, sole
+    -3.5, 14, -5, 4, -- left side: ankle back up to the hip
+}
+local HEAD_LY, HEAD_R = -16, 6
+
 local function drawPlayerMarker()
-    gfx.setColor(gfx.kColorBlack)
-    local x, y = Player.x, Field.PLAYER_Y
-    gfx.fillCircleAtPoint(x, y - 14, 8)
-    gfx.fillTriangle(x - 12, y + 20, x + 12, y + 20, x, y - 4)
-    -- Kick leg, rotating 1:1 with the crank (0 = up, clockwise) so winding
-    -- up and flicking read on-screen. The white underlay keeps the leg
-    -- legible when it sweeps across the solid black body (about half the
-    -- rotation, verified by capture). Placeholder like the rest of the
-    -- figure; stays inside this one draw function for the later sprite swap.
+    -- The figure tips 1:1 with the crank (0 = upright): cranking swings
+    -- the feet toward the goal and the head toward the camera, and back.
+    -- Whichever end is nearer the camera draws last, so a figure tipped
+    -- toward you reads as just the head circle occluding the body — like
+    -- eyeballing a spun rod from behind. The white halo keeps each part
+    -- legible over the rod, the ball, and the part behind it. Placeholder
+    -- like the rest; stays inside this one draw function for the later
+    -- sprite swap.
+    local x = Player.x
     local rad = math.rad(Player.crankAngle)
-    local hipX, hipY = x + 6, y + 6
-    local footX = hipX + 12 * math.sin(rad)
-    local footY = hipY - 12 * math.cos(rad)
-    gfx.setColor(gfx.kColorWhite)
-    gfx.setLineWidth(5)
-    gfx.drawLine(hipX, hipY, footX, footY)
-    gfx.fillCircleAtPoint(footX, footY, 4)
-    gfx.setColor(gfx.kColorBlack)
-    gfx.setLineWidth(3)
-    gfx.drawLine(hipX, hipY, footX, footY)
-    gfx.setLineWidth(1)
-    gfx.fillCircleAtPoint(footX, footY, 3)
+    local c, s = math.cos(rad), math.sin(rad)
+
+    local pts = {}
+    for i = 1, #FIGURE_BODY, 2 do
+        pts[i] = x + FIGURE_BODY[i]
+        pts[i + 1] = ROD_Y + FIGURE_BODY[i + 1] * c
+    end
+    -- drawPolygon strokes the closing edge only if the first point is
+    -- repeated, so append it for the halo pass.
+    pts[#pts + 1] = pts[1]
+    pts[#pts + 1] = pts[2]
+
+    -- s > 0 means the head end is the near end; it also swells slightly
+    -- as it comes at you (and shrinks tipped away) for a bit of depth.
+    local headY = ROD_Y + HEAD_LY * c
+    local headR = HEAD_R + 1.5 * s
+
+    local function drawBody()
+        gfx.setColor(gfx.kColorWhite)
+        gfx.setLineWidth(5)
+        gfx.drawPolygon(table.unpack(pts))
+        gfx.setColor(gfx.kColorBlack)
+        gfx.fillPolygon(table.unpack(pts))
+        gfx.setLineWidth(1)
+    end
+    local function drawHead()
+        gfx.setColor(gfx.kColorWhite)
+        gfx.fillCircleAtPoint(x, headY, headR + 2)
+        gfx.setColor(gfx.kColorBlack)
+        gfx.fillCircleAtPoint(x, headY, headR)
+    end
+
+    if s >= 0 then
+        drawBody()
+        drawHead()
+    else
+        drawHead()
+        drawBody()
+    end
 end
 
 local function drawBallMarker()
@@ -126,6 +178,7 @@ function Render.draw(dt)
     end
     drawGoal()
     drawGoalieMarker()
+    drawRod()
     if not ballInNet() then
         drawBallMarker()
     end

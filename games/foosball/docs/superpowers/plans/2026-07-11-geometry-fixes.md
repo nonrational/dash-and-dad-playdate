@@ -451,6 +451,15 @@ git -c commit.gpgsign=false commit -m "Give goals and saves distinct rest poses 
 
 ### Task 4: Crank-tracking kick leg on the player figure
 
+> **Addendum (2026-07-11):** superseded — the separate kick leg is gone.
+> The whole foosball-man silhouette now tips forward/backward around a
+> drawn rod, 1:1 with the crank: each vertex keeps its x and has its
+> local y foreshortened by `cos(angle)`, and whichever end is nearer the
+> camera draws last, so a figure tipped toward you reads as just the head
+> circle occluding the body. Step 1's `Player.crankAngle` (and its dock
+> guard) is unchanged and still feeds the pose; see `drawPlayerMarker` and
+> `drawRod` in `source/render.lua`.
+
 **Files:**
 - Modify: `source/player.lua` (`Player` table, `Player.init`, `Player.update`)
 - Modify: `source/render.lua` (`drawPlayerMarker`)

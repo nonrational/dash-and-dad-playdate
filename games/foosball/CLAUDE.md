@@ -101,6 +101,12 @@ mouth rather than clamping instantly to a straight line.
 - `math.random` is used for serve lane randomization in `ball.lua` — fine,
   since automated tests bypass it entirely by pinning `Ball.laneX` directly
   through the `Shots` harness rather than relying on captured randomness.
+- The Playdate Lua runtime does math in single-precision floats:
+  `math.cos(math.rad(90))` comes back ~4e-8, not ~6e-17 like desktop Lua.
+  Any future boot test in `source/tests.lua` asserting on trig-derived
+  values needs a loose tolerance (~1e-4), not the `eq` helper's 1e-9 —
+  learned the hard way when a rotation-helper test hung boot on exactly
+  this.
 - `Ball.update` calls `playdate.getCrankChange()` unconditionally on every
   frame, regardless of `Ball.state` — it returns the delta *since it was
   last called*, not since the last frame, so gating the call to only the
