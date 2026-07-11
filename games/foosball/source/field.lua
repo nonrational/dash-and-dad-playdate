@@ -7,7 +7,7 @@ Field = {
     GOAL_MAX = 260,
     GOAL_Y = 50,
 
-    BALL_MIN_SCALE = 0.3,
+    BALL_MIN_SCALE = 0.5,
     BALL_MAX_SCALE = 1.0,
 
     CONTACT_BAND_HALF = 45,

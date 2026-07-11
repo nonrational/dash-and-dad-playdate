@@ -145,7 +145,12 @@ function Ball.screenX()
     elseif ballAtGoal() then
         return Ball.shotTargetX
     end
-    return Ball.laneX
+    -- Approach (and whiff-frozen) ball: converge toward the lane's
+    -- goal-space image as it recedes, so a wide lane rides down inside the
+    -- narrowing pitch instead of hanging in space beside the goal. At
+    -- progress 1 this is exactly laneX — contact geometry is unaffected.
+    return Geom.projectX(Ball.laneX, 1 - Geom.clamp(Ball.progress, 0, 1),
+        Field.TRACK_MIN, Field.TRACK_MAX, Field.GOAL_MIN, Field.GOAL_MAX)
 end
 
 function Ball.screenY()

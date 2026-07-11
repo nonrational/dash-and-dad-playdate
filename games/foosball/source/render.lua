@@ -1,4 +1,5 @@
 import "CoreLibs/graphics"
+import "geom"
 import "field"
 import "player"
 import "ball"
@@ -19,14 +20,28 @@ end
 function Render.init()
 end
 
-local NEAR_LEFT, NEAR_RIGHT = Field.TRACK_MIN - 30, Field.TRACK_MAX + 30
-local FAR_LEFT, FAR_RIGHT = Field.GOAL_MIN - 20, Field.GOAL_MAX + 20
+local PITCH_MARGIN = 30
+
+-- Depth (0 = player track, 1 = goal line) of a screen y; extrapolates past
+-- the track so the sidelines can run to the bottom edge of the screen.
+local function depthAtY(y)
+    return (Field.PLAYER_Y - y) / (Field.PLAYER_Y - Field.GOAL_Y)
+end
+
+local function sidelineX(trackX, y)
+    return Geom.projectX(trackX, depthAtY(y),
+        Field.TRACK_MIN, Field.TRACK_MAX, Field.GOAL_MIN, Field.GOAL_MAX)
+end
 
 local function drawPitch()
     gfx.setColor(gfx.kColorBlack)
     gfx.setLineWidth(2)
-    gfx.drawLine(NEAR_LEFT, 240, FAR_LEFT, Field.GOAL_Y)
-    gfx.drawLine(NEAR_RIGHT, 240, FAR_RIGHT, Field.GOAL_Y)
+    local leftEdge = Field.TRACK_MIN - PITCH_MARGIN
+    local rightEdge = Field.TRACK_MAX + PITCH_MARGIN
+    gfx.drawLine(sidelineX(leftEdge, 240), 240, sidelineX(leftEdge, Field.GOAL_Y), Field.GOAL_Y)
+    gfx.drawLine(sidelineX(rightEdge, 240), 240, sidelineX(rightEdge, Field.GOAL_Y), Field.GOAL_Y)
+    gfx.drawLine(sidelineX(leftEdge, Field.GOAL_Y), Field.GOAL_Y,
+        sidelineX(rightEdge, Field.GOAL_Y), Field.GOAL_Y)
     gfx.setLineWidth(1)
 end
 

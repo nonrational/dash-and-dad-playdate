@@ -57,11 +57,14 @@ streak persists across sessions.
   (background), consistent with submariner's "distance = smaller + higher
   on screen" depth cue.
 - **Ball:** one `progress` value p ∈ [0, 1] per serve drives both position
-  and scale. `ball.x` stays fixed at that serve's lane x (it's travelling
-  straight toward the camera, not sideways); `ball.y` and `ball.scale`
-  interpolate from the goal end (p=0, small/high) to the player's track (p=1,
-  large/low). Reused as pure math in `geom.lua` (`lerp`), same spirit as
-  submariner keeping projection math SDK-free and testable.
+  and scale. The ball's *lane* is fixed in track-space, but its on-screen x
+  converges toward the lane's goal-space image as it recedes
+  (`Geom.projectX`, mapping [50, 350] onto [140, 260] at the goal line) —
+  at p=0 it sits between the posts, at p=1 it is exactly at lane x on the
+  track; `ball.y` and `ball.scale` interpolate from the goal end (p=0,
+  small/high) to the player's track (p=1, large/low). Pure math in
+  `geom.lua` (`lerp`, `projectX`), same spirit as submariner keeping
+  projection math SDK-free and testable.
 
 ## Shot Mechanics — the Core Loop
 

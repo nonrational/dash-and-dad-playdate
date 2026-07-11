@@ -68,10 +68,13 @@ modules whose *mechanic* is inherently mutual:
 `y = 205`; goal `x ∈ [140, 260]` at `y = 50`. The goalie moves within that
 same `[140, 260]` range, resting at `x = 200` — it never needs to defend
 outside the posts, since shot aim (`Ball.shotTargetX`) is always clamped
-inside the goal frame too. A served ball's `x` (its lane) stays fixed while
-`y`/scale interpolate from the goal
-end (small/far) to the player's track (large/near) as approach progress
-goes 0→1. On contact, `Ball.contactX` (the raw player position, in
+inside the goal frame too. A served ball's lane is fixed in track-space, but its on-screen `x` follows
+`Geom.projectX(laneX, 1 - progress, …)` — converging toward the lane's
+goal-space image at the far end (so wide lanes stay inside the pitch) and
+landing exactly on `laneX` at contact — while `y`/scale interpolate from
+the goal end (small/far) to the player's track (large/near) as approach
+progress goes 0→1. The pitch sidelines and far goal line in `render.lua`
+are derived from that same projection. On contact, `Ball.contactX` (the raw player position, in
 track-space — used for the contact-band check) is distinct from
 `Ball.shotTargetX` (that same position clamped into goal-space via
 `Geom.clamp` — used for the goalie's target and the save check), so a shot
