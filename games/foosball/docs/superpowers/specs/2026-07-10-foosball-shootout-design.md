@@ -102,15 +102,28 @@ power — harder shots leave the goalie less time to react.
 
 The goalie has no information before contact — it only starts moving once
 your shot's target x is known, which keeps it feeling fair rather than
-psychic. It moves toward that target at `min(140 + 8 × streak, 220)` px/s
-(base 140px/s, ramping 8px/s per streak point, capped at 220px/s — the ramp
+psychic. It moves toward that target at `min(60 + 4 × streak, 100)` px/s
+(base 60px/s, ramping 4px/s per streak point, capped at 100px/s — the ramp
 reaches its cap right around streak 10). It rests at center between serves,
 so the worst case for the player is a maxed-out goalie already centered
 when a maximum-power shot is aimed at either post — 60px away, half the
-120px goal width. It can cover at most `220 × 0.22 ≈ 48px` before that
-shot arrives — short of the 60px it needs, leaving a persistent ~12px gap
-near each post that's unreachable even at max difficulty. Exact constants
-are starting points, to be tuned by playtesting like submariner's.
+120px goal width.
+
+The save check isn't "did the goalie reach the exact target x" — it's
+`Geom.inBand(goalieX, shotTargetX, saveRadius)`, a save radius of 26px
+standing in for the goalie's reach around its center. That radius is free
+coverage the goalie doesn't have to travel for, so the distance it actually
+needs to *close* is `60 − 26 = 34px`, not the full 60. At max difficulty and
+max power, it can close `100 × 0.22 ≈ 22px` — short of the 34px it needs,
+leaving a persistent ~12px gap near each post that's unreachable even at
+max difficulty. (An earlier draft of these constants — 140/8/220 — sized
+the goalie speed against the full 60px, missing the save radius entirely;
+with a 26px save radius that math was wrong regardless of top speed,
+since even 220px/s comfortably closes the true 34px gap. Any future
+retuning of `Field.SAVE_RADIUS`, the goal width, or these speed constants
+must re-derive the "always beatable" margin from `halfGoalWidth −
+saveRadius`, not `halfGoalWidth` alone.) Exact constants are starting
+points, to be tuned by playtesting like submariner's.
 
 - Streak +1 on a goal.
 - Streak resets to 0 on a save or either whiff type.
