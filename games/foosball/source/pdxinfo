@@ -4,3 +4,4 @@ description=An arcade foosball shootout.
 bundleID=com.supertinylabs.foosball
 version=0.1
 buildNumber=1
+imagePath=launcher

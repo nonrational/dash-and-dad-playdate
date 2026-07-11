@@ -91,6 +91,13 @@ mouth rather than clamping instantly to a straight line.
   (`assets/splash-box-art.png`, 1024×572 — wider than the screen's 5:3,
   hence the fill-crop) with:
   `ffmpeg -i assets/splash-box-art.png -vf "scale=430:240:flags=lanczos,crop=400:240,format=gray,scale=400:240:sws_dither=bayer,format=monob" source/images/splash.png`.
+  The launcher assets in `source/launcher/` (`imagePath=launcher` in
+  `pdxinfo`) come from the same art: `card.png` (350×155) uses the same
+  ffmpeg pipeline with `scale=350:196…,crop=350:155:0:10`;
+  `launchImage.png` is a byte-for-byte copy of the splash;
+  `icon.png` (32×32) is NOT a downscale — box art turns to dither noise at
+  that size — it's a code-drawn chibi man rasterized by a throwaway PBM
+  script (regenerate by redrawing bold shapes, not by scaling art down).
   The player/goalie/ball in `render.lua` are still simple code-drawn
   placeholder shapes, each behind one small, single-purpose draw function,
   specifically so swapping in real sprites later is a localized change
