@@ -98,3 +98,11 @@ mouth rather than clamping instantly to a straight line.
 - `math.random` is used for serve lane randomization in `ball.lua` — fine,
   since automated tests bypass it entirely by pinning `Ball.laneX` directly
   through the `Shots` harness rather than relying on captured randomness.
+- `Ball.update` calls `playdate.getCrankChange()` unconditionally on every
+  frame, regardless of `Ball.state` — it returns the delta *since it was
+  last called*, not since the last frame, so gating the call to only the
+  `window` state would let crank motion during the ~1.3s `approach` phase
+  accumulate undrained and dump as one inflated reading the instant
+  `window` opens, producing a velocity spike the player never intended.
+  This was a real bug found and fixed during Task 6's review; see the
+  comment above the `playdate.getCrankChange()` call in `source/ball.lua`.
