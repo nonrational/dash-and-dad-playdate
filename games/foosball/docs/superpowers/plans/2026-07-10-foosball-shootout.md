@@ -16,7 +16,7 @@
 - Playdate `import` is a compile-time, once-only textual include; it returns nothing. Modules therefore define globals: `Geom`, `Field`, `Player`, `Ball`, `Goalie`, `Game`, `Render`, `Audio`, `Splash`, `runTests`.
 - Screen is 400×240, 1-bit. Target **30fps** (`playdate.display.setRefreshRate(30)`).
 - Field layout constants (from spec, do not change without updating the spec first): track `x ∈ [50, 350]`, player y `205`; goal `x ∈ [140, 260]`, goal y `50`, goalie rest position `x = 200` — the goalie moves within this same `[140, 260]` range, since shot aim is always clamped inside the goal frame (no wide misses) and so the goalie never needs to defend outside the posts either; ball scale `0.3` (far) → `1.0` (near); contact band half-width `45px`; save radius `26px`.
-- Shot-mechanic constants (from spec): serve duration `1.6s`; contact window opens at `82%` of serve progress; flick velocity threshold `900°/s`; reference velocity `1800°/s` (→ power `1.0`); power range `[0.5, 1.0]` (0.5 is the power at exactly the threshold velocity — there is no lower floor to clamp to, since a sub-threshold flick never registers as a strike in the first place); shot flight time `0.55s` (min power) → `0.22s` (max power); goalie speed `min(140 + 8 × streak, 220)` px/s (ramp caps around streak 10).
+- Shot-mechanic constants (from spec): serve duration `1.6s`; contact window opens at `82%` of serve progress; flick velocity threshold `900°/s`; reference velocity `1800°/s` (→ power `1.0`); power range `[0.5, 1.0]` (0.5 is the power at exactly the threshold velocity — there is no lower floor to clamp to, since a sub-threshold flick never registers as a strike in the first place); shot flight time `0.55s` (min power) → `0.22s` (max power); goalie speed `min(60 + 4 × streak, 100)` px/s (ramp caps around streak 10). The save check is `Geom.inBand(goalieX, shotTargetX, Field.SAVE_RADIUS)` — the goalie's 26px save radius is free coverage, so the "always beatable" fairness margin is measured against `halfGoalWidth − saveRadius` (34px), not `halfGoalWidth` alone (60px); an earlier draft of this speed (140/8/220) sized against the full 60px and was wrong once the save radius existed — see the spec's Goalie & Difficulty section.
 - **Sprite art deferred.** The spec allows image assets for the player/goalie/ball (unlike submariner's zero-asset rule), but no art exists yet this session. Every task below draws these as simple code-drawn silhouettes instead — small, focused draw functions (`drawPlayerMarker`, `drawGoalieMarker`, `drawBallMarker`) called from one place each in `render.lua`, so swapping in real sprite images later is a localized change to those three functions, not a redesign.
 - No host Lua exists on this machine. Pure-math tests run at boot **inside the simulator** (`runTests()` guarded by `playdate.isSimulator`) and print to the simulator console. To see console output, launch the simulator binary directly: `"$HOME/Developer/PlaydateSDK/bin/Playdate Simulator.app/Contents/MacOS/Playdate Simulator" Foosball.pdx`. A failed assertion calls `error()`, which the simulator surfaces as a crash screen.
 - `playdate.graphics.setDitherPattern(alpha, ditherType)` has a documented quirk: alpha runs inverted vs. intuition for black ink. All dithered fills go through the `setInk(darkness)` helper defined in Task 3 — never call `setDitherPattern` directly elsewhere.
@@ -166,9 +166,9 @@ function runTests()
     eq(Geom.shotFlightTime(1.0, 0.5, 1.0, 0.55, 0.22), 0.22, "shot time at max power")
     eq(Geom.shotFlightTime(0.75, 0.5, 1.0, 0.55, 0.22), 0.385, "shot time at half power")
 
-    eq(Geom.goalieSpeed(0, 140, 8, 220), 140, "goalie speed at streak 0")
-    eq(Geom.goalieSpeed(5, 140, 8, 220), 180, "goalie speed ramping")
-    eq(Geom.goalieSpeed(50, 140, 8, 220), 220, "goalie speed capped")
+    eq(Geom.goalieSpeed(0, 60, 4, 100), 60, "goalie speed at streak 0")
+    eq(Geom.goalieSpeed(5, 60, 4, 100), 80, "goalie speed ramping")
+    eq(Geom.goalieSpeed(50, 60, 4, 100), 100, "goalie speed capped")
 
     print("geom tests: all passed")
 end
@@ -1048,7 +1048,7 @@ Replaces Task 6's "always a goal" placeholder with a real goalie that only start
 
 **Interfaces:**
 - Consumes: `Geom.goalieSpeed` (Task 2); `Field.GOALIE_CENTER` (Task 3); `Ball.state`, `Ball.shotTargetX` (Task 5/6).
-- Produces: `Goalie.x`, `Goalie.BASE_SPEED` (140), `Goalie.RAMP_PER_STREAK` (8), `Goalie.MAX_SPEED` (220), `Goalie.init()`, `Goalie.update(dt, streak)`. Task 8 is the only later task that changes how `streak` is supplied to this call.
+- Produces: `Goalie.x`, `Goalie.BASE_SPEED` (60), `Goalie.RAMP_PER_STREAK` (4), `Goalie.MAX_SPEED` (100), `Goalie.init()`, `Goalie.update(dt, streak)`. Task 8 is the only later task that changes how `streak` is supplied to this call.
 
 - [ ] **Step 1: Write `source/goalie.lua`**
 
@@ -1059,9 +1059,9 @@ import "ball"
 
 Goalie = { x = Field.GOALIE_CENTER }
 
-Goalie.BASE_SPEED = 140
-Goalie.RAMP_PER_STREAK = 8
-Goalie.MAX_SPEED = 220
+Goalie.BASE_SPEED = 60
+Goalie.RAMP_PER_STREAK = 4
+Goalie.MAX_SPEED = 100
 
 function Goalie.init()
     Goalie.x = Field.GOALIE_CENTER
@@ -1140,7 +1140,7 @@ In `source/shots.lua`, set:
 
 ```lua
 Shots = { plan = {
-    { after = 0.1, target = Ball, set = {
+    { after = 0.2, target = Ball, set = {
         state = "flight", contactX = 200, shotTargetX = 195, flightT = 0, flightDuration = 5,
     }, path = "/tmp/foosball-task7-save.png" },
     { after = 0.05, target = Ball, set = {
@@ -1161,8 +1161,8 @@ ls -la /tmp/foosball-task7-*.png
 ```
 
 Expected: both files exist. Use the Read tool to view each:
-- `foosball-task7-save.png`: `shotTargetX = 195` is only 5px from the goalie's center rest position, and Goalie moves at ≥140px/s — the goalie marker should have already reached and be sitting right under the ball marker.
-- `foosball-task7-goal.png`: `shotTargetX = 140` is 60px away (the farthest any shot can be aimed), captured after only ~0.05s — the goalie marker should have moved only slightly left of center, visibly far from the ball marker at the left post. (There's no on-screen text yet to state "SAVE"/"GOAL" outright — Task 8 adds the HUD that makes outcomes textually explicit. This step is a visual proxy: goalie overlapping the ball reads as a save, goalie visibly short of it reads as a goal.)
+- `foosball-task7-save.png`: `shotTargetX = 195` is only 5px from the goalie's center rest position; at the base speed of 60px/s (streak hardcoded to 0 in this task's `main.lua`), 0.2s covers 12px — comfortable margin over the 5px needed, even accounting for a frame or two of capture-timing slop. The goalie marker should have already reached and be sitting right under the ball marker.
+- `foosball-task7-goal.png`: `shotTargetX = 140` is 60px away (the farthest any shot can be aimed), captured after only ~0.05s — at 60px/s that's 3px of travel, so the goalie marker should have moved only slightly left of center, visibly far from the ball marker at the left post. (There's no on-screen text yet to state "SAVE"/"GOAL" outright — Task 8 adds the HUD that makes outcomes textually explicit. This step is a visual proxy: goalie overlapping the ball reads as a save, goalie visibly short of it reads as a goal.)
 
 - [ ] **Step 5: Revert the smoke-test probe**
 
