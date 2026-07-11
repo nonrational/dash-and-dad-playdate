@@ -15,6 +15,8 @@ Ball = {
     resultPending = false,
     contactJustNow = false,
     resolvedTimer = 0,
+    restX = nil,
+    restY = nil,
 }
 
 Ball.T_SERVE = 1.6
@@ -41,6 +43,8 @@ function Ball.startServe()
     Ball.shotTargetX = nil
     Ball.contactPower = nil
     Ball.result = nil
+    Ball.restX = nil
+    Ball.restY = nil
 end
 
 function Ball.init()
@@ -122,7 +126,17 @@ function Ball.update(dt)
 end
 
 function Ball.resolve(goalieX)
-    Ball.result = Geom.inBand(goalieX, Ball.shotTargetX, Field.SAVE_RADIUS) and "save" or "goal"
+    local saved = Geom.inBand(goalieX, Ball.shotTargetX, Field.SAVE_RADIUS)
+    Ball.result = saved and "save" or "goal"
+    -- Rest pose is where the outcome story ends: a save parks the ball at
+    -- the goalie that blocked it (not at the aim point, which can be up to
+    -- SAVE_RADIUS away and reads as "it went in"); a goal parks it inside
+    -- the net.
+    if saved then
+        Ball.restX, Ball.restY = goalieX, Field.GOAL_Y - 8
+    else
+        Ball.restX, Ball.restY = Ball.shotTargetX, Field.GOAL_Y - 10
+    end
     Ball.resultPending = true
     Ball.state = "resolved"
     Ball.resolvedTimer = 0
@@ -143,7 +157,7 @@ function Ball.screenX()
     if Ball.state == "flight" or Ball.state == "flightComplete" then
         return Geom.lerp(Ball.contactX, Ball.shotTargetX, flightProgress())
     elseif ballAtGoal() then
-        return Ball.shotTargetX
+        return Ball.restX
     end
     -- Approach (and whiff-frozen) ball: converge toward the lane's
     -- goal-space image as it recedes, so a wide lane rides down inside the
@@ -157,7 +171,7 @@ function Ball.screenY()
     if Ball.state == "flight" or Ball.state == "flightComplete" then
         return Geom.lerp(Field.PLAYER_Y, Field.GOAL_Y, flightProgress())
     elseif ballAtGoal() then
-        return Field.GOAL_Y
+        return Ball.restY
     end
     return Geom.lerp(Field.GOAL_Y, Field.PLAYER_Y, Geom.clamp(Ball.progress, 0, 1))
 end

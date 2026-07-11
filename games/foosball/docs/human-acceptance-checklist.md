@@ -75,3 +75,8 @@ in Tasks 1-11. Run `make run`, play for a few minutes, and check each item.
 - [ ] **Device-only**: if testing on real hardware, confirm the 1-bit
   display reads clearly in different lighting, and that the crank feels
   good physically (not just in the simulator's mouse-drag crank emulation).
+- [ ] **Save rest pose**: a save reads at a glance in live play — the ball
+  stops at the goalie (never in the net) and the goalie holds the block for
+  the whole SAVED banner.
+- [ ] **Goal rest pose**: a goal reads at a glance in live play — the ball
+  visibly sits in the net, hatched over by the net fill.

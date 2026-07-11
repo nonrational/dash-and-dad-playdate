@@ -16,6 +16,10 @@ function Goalie.update(dt, streak)
     local target = Field.GOALIE_CENTER
     if Ball.state == "flight" or Ball.state == "flightComplete" then
         target = Ball.shotTargetX
+    elseif Ball.state == "resolved" and Ball.result == "save" then
+        -- Hold the block through the SAVED banner: drifting home would
+        -- abandon the ball the goalie just stopped.
+        target = Goalie.x
     end
 
     local speed = Geom.goalieSpeed(streak, Goalie.BASE_SPEED, Goalie.RAMP_PER_STREAK, Goalie.MAX_SPEED)

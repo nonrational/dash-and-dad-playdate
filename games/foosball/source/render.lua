@@ -84,16 +84,28 @@ local RESULT_TEXT = {
 
 local function drawResultBanner()
     if Ball.state == "resolved" and RESULT_TEXT[Ball.result] then
-        gfx.drawTextAligned(RESULT_TEXT[Ball.result], 200, 200, kTextAlignment.center)
+        gfx.drawTextAligned(RESULT_TEXT[Ball.result], 200, 120, kTextAlignment.center)
     end
+end
+
+-- A scored ball draws before the goal so the net's dither hatches over it
+-- — visibly *in* the net. A saved ball draws after the goalie (normal
+-- order), sitting in front of the figure that blocked it.
+local function ballInNet()
+    return Ball.state == "resolved" and Ball.result == "goal"
 end
 
 function Render.draw(dt)
     gfx.clear(gfx.kColorWhite)
     drawPitch()
+    if ballInNet() then
+        drawBallMarker()
+    end
     drawGoal()
     drawGoalieMarker()
-    drawBallMarker()
+    if not ballInNet() then
+        drawBallMarker()
+    end
     drawPlayerMarker()
     drawHUD()
     drawResultBanner()
