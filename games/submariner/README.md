@@ -3,9 +3,12 @@
 An ambient submarine periscope toy for [Playdate](https://play.date).
 
 Rotate the periscope with the d-pad. Raise and lower it with the crank —
-three full turns sweep from the depths to high above the waves. Boats and a
-lighthouse above the waterline with gull calls overhead; fish, bubbles, and
-deepening murk below. No objectives. Just watch the sea.
+three full turns sweep from the depths to high above the waves.
+
+Hold the crosshairs on the target shown on the right-hand rail to play an
+endless game of I Spy—spotting planes, helicopters, and a rival submarine above
+the waterline, or sharks, whales, and schools of fish below—or just ignore the
+prompts and watch the sea.
 
 ## Demo
 
