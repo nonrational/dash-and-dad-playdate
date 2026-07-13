@@ -2,6 +2,8 @@
 
 An arcade foosball shootout for [Playdate](https://play.date).
 
+![The Foosball Shootout splash: a retro cartridge-box foosball match, with the on-boot controls banner reading "D-pad aim, Crank shoot, A start".](docs/screenshots/splash.png)
+
 Slide left and right with the d-pad to line up with the incoming ball. The
 crank tips your foosball man forward and back, 1:1 with your hand — flick it
 inside the contact window to strike the ball past the goalie. Miss the window
