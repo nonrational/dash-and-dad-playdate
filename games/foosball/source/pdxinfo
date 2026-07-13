@@ -1,7 +1,7 @@
 name=Foosball Shootout
 author=Super Tiny Labs
 description=An arcade foosball shootout.
-bundleID=com.supertinylabs.foosball
+bundleID=com.dashanddad.foosball
 version=0.1
 buildNumber=1
 imagePath=launcher
